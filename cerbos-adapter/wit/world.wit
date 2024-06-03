@@ -1,0 +1,6 @@
+package cerbos-hub:cerbos-adapter;
+
+world cerbos-adapter {
+    import cerbos-hub:epdp/authorization;
+    export cerbos:policy/authorization;
+}

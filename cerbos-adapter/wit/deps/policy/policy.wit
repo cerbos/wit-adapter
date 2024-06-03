@@ -1,0 +1,70 @@
+package cerbos:policy;
+
+interface authorization {
+    record principal {
+        id: string,
+        policy-version: option<string>,
+        roles: list<string>,
+        scope: option<string>,
+        attr-json: option<string>,
+    }
+    record %resource {
+        id: string,
+        policy-version: option<string>,
+        kind: string,
+        scope: option<string>,
+        attr-json: option<string>,
+    }
+    record resource-entry {
+        actions: list<string>,
+        %resource: %resource,
+    }
+    record aux-data {
+        jwt-json: option<string>
+    }
+    record request {
+        request-id: string,
+        principal: principal,
+        resources: list<resource-entry>,
+        aux-data: option<aux-data>,
+    }
+    record result-entry-resource {
+        id: string,
+        policy-version: string,
+        kind: string,
+        scope: string,
+    }
+    record effect-meta {
+        matched-scope: string,
+        matched-policy: string,
+    }
+    record result-entry-meta {
+        actions: list<tuple<string, effect-meta>>,
+        effective-derived-roles: list<string>,
+    }
+    record output-entry {
+        src: string,
+        val-json: string,
+    }
+    enum effect {
+        unspecified,
+        allow,
+        deny,
+        no-match,
+    }
+    record result-entry {
+        %resource: result-entry-resource,
+        actions: list<tuple<string, effect>>,
+        meta: result-entry-meta,
+        outputs: list<output-entry>,
+    }
+    record response {
+        request-id: string,
+        results: list<result-entry>,
+    }
+    check: func(input: request) -> result<response, string>;
+}
+
+world policy {
+    export authorization;
+}

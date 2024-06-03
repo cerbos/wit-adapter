@@ -1,0 +1,26 @@
+name := "cerbos_adapter.wasm"
+name_signed := "cerbos_adapter_s.wasm"
+output := "cerbos-adapter-composed.wasm"
+
+target_arch_os := "wasm32-wasip1"
+target := join(justfile_directory(), "target", target_arch_os, "release", name)
+
+compose: build
+    wasm-tools compose ./build/{{ name }} -d ../workspace/policy-wasi.wasm -o ./build/{{ output }}
+
+build:
+    cargo build --release --target {{ target_arch_os }}
+    mkdir -p build
+    wasm-tools component new {{ target }} -o ./build/{{ name }} --adapt ./wasi_snapshot_preview1.wasm
+
+sign: compose
+    wash claims sign ./build/{{ output }} --destination ./build/{{ name_signed }}
+
+stop:
+    wash stop component cerbos
+
+start: sign
+    wash start component file://{{ justfile_directory() }}/build/{{ name_signed }} cerbos
+
+link:
+    wash link put --interface authorization cerbos_http_proxy-http_component cerbos cerbos policy
