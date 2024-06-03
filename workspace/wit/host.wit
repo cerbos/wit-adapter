@@ -1,0 +1,8 @@
+package cerbos-hub:epdp;
+
+interface authorization {
+    check-wasi: func(s: string) -> string;
+}
+world policy {
+    export authorization;
+}

@@ -1,0 +1,17 @@
+policy_wasi := "policy-wasi.wasm"
+target_arch_os := "wasm32-unknown-unknown"
+target := join(justfile_directory(), "target", target_arch_os, "release", "policy.wasm")
+
+link: build build-now-stub
+    wasm-tools component new {{ target }} -o {{ policy_wasi }} --adapt ./env.wasm
+
+build:
+    cargo build --release --target {{ target_arch_os }}
+
+build-now-stub:
+    #!/usr/bin/env bash
+    rustc -o env.wasm --target {{ target_arch_os }} --crate-type cdylib --edition=2021 \
+     -C opt-level=z -C lto -C codegen-units=1 -C debuginfo=0  - <<EOF
+    #[no_mangle]
+    pub unsafe extern "C" fn now() -> u64 { 0 }
+    EOF
