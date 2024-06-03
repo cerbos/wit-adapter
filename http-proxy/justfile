@@ -1,0 +1,15 @@
+name := "http_proxy.wasm"
+cerbos_adapter := "cerbos-adapter-composed.wasm"
+target := join(justfile_directory(), "build", name)
+output := "http-cerbos.wasm"
+
+all: compose
+    wasmtime serve --addr 0.0.0.0:8081 -S common {{ output }}
+
+compose:
+    wash build --build-only
+    wasm-tools compose ./build/{{ name }} -d ../cerbos-adapter/build/{{ cerbos_adapter }} -o {{ output }}
+
+deploy:
+    wash build
+    wash app deploy ./wadm.yaml
