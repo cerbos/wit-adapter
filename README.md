@@ -48,7 +48,7 @@ build-now-stub:
 We build steps are:
 1. build the ePDP as usual but with the `wit-bindgen` crate dependency.
 2. build a stub for the wall clock `now` function to satisfy the wasm module import. (We can’t yet convert a module import to a component import, which would be the ideal solution)
-3. link the ePDP module with the stub module and create a component with the embedded interface:
+3. link the ePDP module with the stub module and create a component with this simple interface:
 ```wit
 package cerbos-hub:epdp;
 
@@ -56,7 +56,7 @@ interface authorization {
     check-wasi: func(s: string, now: u64) -> string;
 }
 ```
-The interface reflects the module's API, with the exception that string lifting and memory management is done by the `wit-bindgen` and the following extra code:
+The interface reflects the module's API, with the exception that string lifting and memory management are done by the `wit-bindgen` and the following extra code:
 
 ```rust
 wit_bindgen::generate!(in "../wit");
@@ -70,6 +70,9 @@ impl Guest for EPDP {
 }
 export!(EPDP);
 ```
-# Diagram
-The `cerbos-adapter` component imports the interface of the Cerbos ePDP component, encoded from the (Wasm Core module).
+
+However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. Thus, we created a generic component, `cerbos-adapter`.
+As per the following diagram, `cerbos-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
+Please refer to the [cebos-adapter/justfile](cebos-adapter/justfile) for the build process.
+
 ![Components](Components.png)
