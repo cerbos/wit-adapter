@@ -23,7 +23,7 @@ ePDP API is effectively a function `fn check(input: String) -> String`, except t
 
 Here, we explored converting a Wasm core module binary to a Wasm component. Please note that we are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
 
-You can check how we built ePDP in the `/workspace/justfile`.
+You can check how we built ePDP in the [workspace justfile](/workspace/justfile).
 
 ⚠️ This `justfile` is given only for the reference. It can't be run in the repo.
 ```justfile
