@@ -21,14 +21,9 @@ extern "C" {
 In the original use case, ePDPs are used in single-page applications and are meant to be used via [Cerbos JavaScript SDK](https://github.com/cerbos/cerbos-sdk-javascript/blob/main/packages/embedded/README.md).
 ePDP API is effectively a function `fn check(input: String) -> String`, except that the SDK needs to allocate/deallocate memory for the strings. The SDK converts these strings (JSON serialization) to rich types, which are then exposed to the SPA.
 
-Here, we explored converting a Wasm core module binary to a Wasm component. 
-NOTE: We are not building a component for the required set of policies, at least for now.
+Here, we explored converting a Wasm core module binary to a Wasm component. Please note that, at least for now, we are not building a component for the required set of policies. We keep building a module.
 
-
-In the following `justfile` we do:
-1. build the ePDP as usual.
-2. build a stub for the wall clock `now` function to satisfy the wasm module import. (We can’t yet convert a module import to a component import, which would be the ideal solution)
-3. link the ePDP module with the stub module and create a component.
+You can check how we built ePDP in the `/workspace/justfile`.
 
 ⚠️ This `justfile` is given only for the reference. It can't be run in the repo.
 ```justfile
@@ -50,7 +45,31 @@ build-now-stub:
     pub unsafe extern "C" fn now() -> u64 { 0 }
     EOF
 ```
+We build steps are:
+1. build the ePDP as usual but with the `wit-bindgen` crate dependency.
+2. build a stub for the wall clock `now` function to satisfy the wasm module import. (We can’t yet convert a module import to a component import, which would be the ideal solution)
+3. link the ePDP module with the stub module and create a component with the embedded interface:
+```wit
+package cerbos-hub:epdp;
 
+interface authorization {
+    check-wasi: func(s: string, now: u64) -> string;
+}
+```
+The interface reflects the module's API, with the exception that string lifting and memory management is done by the `wit-bindgen` and the following extra code:
+
+```rust
+wit_bindgen::generate!(in "../wit");
+struct EPDP;
+
+impl Guest for EPDP {
+    #[doc = r" check-wasi: func(ptr: u32, len: u32, now: s64) -> u64;"]
+    fn check_wasi(s: _rt::String, now: u64) -> _rt::String {
+        policy::check_with_now(&s, now as i64)
+    }
+}
+export!(EPDP);
+```
 # Diagram
 The `cerbos-adapter` component imports the interface of the Cerbos ePDP component, encoded from the (Wasm Core module).
 ![Components](Components.png)
