@@ -21,7 +21,7 @@ extern "C" {
 In the original use case, ePDPs are used in single-page applications and are meant to be used via [Cerbos JavaScript SDK](https://github.com/cerbos/cerbos-sdk-javascript/blob/main/packages/embedded/README.md).
 ePDP API is effectively a function `fn check(input: String) -> String`, except that the SDK needs to allocate/deallocate memory for the strings. The SDK converts these strings (JSON serialization) to rich types, which are then exposed to the SPA.
 
-Here, we explored converting a Wasm core module binary to a Wasm component. Please note that, at least for now, we are not building a component for the required set of policies. We keep building a module.
+Here, we explored converting a Wasm core module binary to a Wasm component. Please note that we are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
 
 You can check how we built ePDP in the `/workspace/justfile`.
 
