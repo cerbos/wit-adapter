@@ -72,7 +72,10 @@ export!(EPDP);
 ```
 
 However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. Thus, we created a generic component, `cerbos-adapter`.
+
 As per the following diagram, `cerbos-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
-Please refer to the [cebos-adapter/justfile](cebos-adapter/justfile) for the build process.
+For the build and composition steps, please refer to the [cebos-adapter/justfile](cebos-adapter/justfile).
+
+The client application `http-proxy` uses the rich interface of the `cerbos-adapter`.
 
 ![Components](Components.png)
