@@ -89,6 +89,6 @@ Prerequisites:
 Let's deploy all components to wasmCloud.
 1. From the `http-proxy` directory, run `just deploy`.
 2. From the `cerbos-adapter` directory, run `just start`, then `just link` to link the components.
-3. Run `curl 'http://localhost:8080?role=user'` to invoke the http-proxy. You should see the `effect::Allow`. Change the role to get `effect::Deny`.
+3. Run `curl 'http://localhost:8080?role=user'` to invoke the http-proxy. You should see the `Effect::Allow`. Change the role to get `Effect::Deny`.
 
 
