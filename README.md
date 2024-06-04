@@ -76,6 +76,18 @@ However, we want our ePDP to use rich types so we can skip the JSON serializatio
 As per the following diagram, `cerbos-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
 For the build and composition steps, please refer to the [cebos-adapter/justfile](cebos-adapter/justfile).
 
-The client application `http-proxy` uses the rich interface of the `cerbos-adapter`.
-
 ![Components](Components.png)
+
+The client application `http-proxy` starts the HTTP component, then calls the `cerbos-adapter` and uses its rich interface.
+
+Prerequisites:
+1. Rust toolchain.
+2. [wasmCloud](https://wasmcloud.com/docs/installation).
+3. [justfile](https://github.com/casey/just).
+
+Let's deploy all components to wasmCloud.
+1. From the `http-proxy` directory, run `just deploy`.
+2. From the `cerbos-adapter` directory, run `just start`, then `just link` to link the components.
+3. Run `curl 'http://localhost:8080?role=user'` to invoke the http-proxy. You should see the `effect::Allow`. Change the role to get `effect::Deny`.
+
+
