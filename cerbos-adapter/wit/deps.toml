@@ -1,3 +1,4 @@
 http = "https://github.com/WebAssembly/wasi-http/archive/v0.2.0.tar.gz"
+clocks = "https://github.com/WebAssembly/wasi-clocks/archive/v0.2.0.tar.gz"
 epdp = "../../workspace/wit"
 policy = "../../wit"

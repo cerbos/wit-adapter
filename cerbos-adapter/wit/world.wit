@@ -2,5 +2,6 @@ package cerbos-hub:cerbos-adapter;
 
 world cerbos-adapter {
     import cerbos-hub:epdp/authorization;
+    import wasi:clocks/wall-clock@0.2.0;
     export cerbos:policy/authorization;
 }
