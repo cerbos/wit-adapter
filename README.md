@@ -45,7 +45,7 @@ build-now-stub:
     pub unsafe extern "C" fn now() -> u64 { 0 }
     EOF
 ```
-We build steps are:
+The build steps are:
 1. build the ePDP as usual but with the `wit-bindgen` crate dependency.
 2. build a stub for the wall clock `now` function to satisfy the wasm module import. (We can’t yet convert a module import to a component import, which would be the ideal solution)
 3. link the ePDP module with the stub module and create a component with this simple interface:
@@ -80,6 +80,7 @@ For the build and composition steps, please refer to the [cebos-adapter/justfile
 
 The client application `http-proxy` starts the HTTP component, then calls the `cerbos-adapter` and uses its rich interface.
 
+## Running the example
 Prerequisites:
 1. Rust toolchain.
 2. [wasmCloud](https://wasmcloud.com/docs/installation).
