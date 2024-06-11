@@ -8,8 +8,8 @@ The interface uses rich types while the existing [Cerbos EPDP interface](./epdp-
 Cerbos service is a policy decision point (PDP).
 This repository deals with embedded Cerbos PDP (ePDP) - a free tier feature of [Cerbos Hub](https://hub.cerbos.cloud/).
 
-ePDP is built from required set policies as a self-contained program, which implements the same [CheckResources API](https://docs.cerbos.dev/cerbos/latest/api/#check-resources).
-Technically, we transpile policies to Rust code and compile it to WebAssembly (core module). A wall clock `now` function is the only dependency ePDP has on the host.
+ePDP is built from a set of policies as a self-contained program, which implements the same [CheckResources API](https://docs.cerbos.dev/cerbos/latest/api/#check-resources).
+Technically, we transpile policies to Rust code and build the WebAssembly core module. A wall clock `now` function is the only dependency ePDP has on the host.
 ```rust
 #[link(wasm_import_module = "env")]
 extern "C" {
@@ -18,50 +18,30 @@ extern "C" {
 }
 ```
 
-In the original use case, ePDPs are used in single-page applications and are meant to be used via [Cerbos JavaScript SDK](https://github.com/cerbos/cerbos-sdk-javascript/blob/main/packages/embedded/README.md).
-ePDP API is effectively a function `fn check(input: String) -> String`, except that the SDK needs to allocate/deallocate memory for the strings. The SDK converts these strings (JSON serialization) to rich types, which are then exposed to the SPA.
+The original use cases for ePDPs include single-page applications and Node.js applications.
+In both cases, [Cerbos JavaScript SDK](https://github.com/cerbos/cerbos-sdk-javascript/blob/main/packages/embedded/README.md) hides the low-level details of interacting with ePDP API, which is effectively a function `fn check(input: String) -> String`, except that the SDK needs to allocate/deallocate memory for the strings.
+The SDK also converts these strings (JSON serialization) to rich types, which are then exposed to the SDK client.
 
-Here, we explored converting a Wasm core module binary to a Wasm component. Please note that we are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
+Here, we explored converting a Wasm core module binary to a Wasm component. We are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
 
-You can check how we built ePDP in the [epdp-wasm justfile](/epdp-wasm/justfile).
-⚠️ This `justfile` is given only for the reference. It can't be run in the repo.
-```justfile
-policy_wasi := "policy-wasi.wasm"
-target_arch_os := "wasm32-unknown-unknown"
-target := join(justfile_directory(), "target", target_arch_os, "release", "policy.wasm")
-
-link: build build-now-stub
-    wasm-tools component new {{ target }} -o {{ policy_wasi }} --adapt ./env.wasm
-
-build:
-    cargo build --release --target {{ target_arch_os }}
-
-build-now-stub:
-    #!/usr/bin/env bash
-    rustc -o env.wasm --target {{ target_arch_os }} --crate-type cdylib --edition=2021 \
-     -C opt-level=z -C lto -C codegen-units=1 -C debuginfo=0  - <<EOF
-    #[no_mangle]
-    pub unsafe extern "C" fn now() -> u64 { 0 }
-    EOF
-```
-The build steps are:
-1. Build the ePDP targeting "wasm32-unknown-unknown" and include the `wit-bindgen` crate dependency.
-2. Build a stub for the wall clock `now` function to satisfy the wasm module import. (We can’t yet convert a module import to a component import, which would be the ideal solution)
-3. Link the ePDP module with the stub module and create a component with this simple interface:
-```wit
-package cerbos-hub:epdp;
-
-interface authorization {
-    check-wasi: func(s: string, now: u64) -> string;
-}
-```
-The interface reflects the module's API, with the exception that string lifting and memory management are done by the `wit-bindgen`. The following code, added to the module, implements the interface:
-
+The idea was to change the ePDP source code incrementally. The increment must not add much both in terms of the binary size and the contract.
+We added `wit-bindgen` crate as a dependency and the following code fragment:
 ```rust
-wit_bindgen::generate!();
+wit_bindgen::generate!({
+    inline: r#"
+        package cerbos-hub:epdp;
+
+        interface authorization {
+            check-wasi: func(s: string, now: u64) -> string;
+        }
+        world policy {
+            export authorization;
+        }
+    "#
+});
 struct EPDP;
 
-impl Guest for EPDP {
+impl exports::cerbos_hub::epdp::authorization::Guest for EPDP {
     #[doc = r" check-wasi: func(ptr: u32, len: u32, now: s64) -> u64;"]
     fn check_wasi(s: _rt::String, now: u64) -> _rt::String {
         policy::check_with_now(&s, now as i64)
@@ -69,11 +49,26 @@ impl Guest for EPDP {
 }
 export!(EPDP);
 ```
+The interface reflects the module's API, with the exception that string lifting and memory management are done by the `wit-bindgen`.
 
-However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. Thus, we created a generic component, `epdp-wasi-adapter`.
+The build steps remained the same: `cargo build --release --target wasm32-unknown-unknown`.
+The produced core module is backward compatible with the SDK, but it can be upgraded to a Wasm component using `wasm-tools component new` command.
+The only problem is satisfying the core module import of the `now` function.
+We solved this by building a core module providing a stub function with the following command:
+```bash
+rustc -o env.wasm --target wasm32-unknown-unknown --crate-type cdylib --edition=2021 \
+ -C opt-level=z -C lto -C codegen-units=1 -C debuginfo=0  - <<EOF
+#[no_mangle]
+pub unsafe extern "C" fn now() -> u64 { 0 }
+EOF
+```
+
+Then to create an ePDP component from an ePDP core module: `wasm-tools component new <INPUT> -o <OUTPUT> --adapt ./env.wasm`
+
+However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. To achive that, we created a generic component, `epdp-wasi-adapter`.
 
 As per the following diagram, `epdp-wasi-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
-For the build and composition steps, please refer to the [cebos-adapter/justfile](cebos-adapter/justfile).
+For the build and composition steps, please refer to the [epdp-wasi-adapter/justfile](epdp-wasi-adapter/justfile).
 
 ![Components](Components.png)
 
