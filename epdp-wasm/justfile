@@ -1,12 +1,9 @@
-policy_wasi := "policy-wasi.wasm"
+epdp_wasi_temp := "epdp-wasi-temp.wasm"
+epdp_wasm := "policy.wasm"
 target_arch_os := "wasm32-unknown-unknown"
-target := join(justfile_directory(), "target", target_arch_os, "release", "policy.wasm")
 
-link: build build-now-stub
-    wasm-tools component new {{ target }} -o {{ policy_wasi }} --adapt ./env.wasm
-
-build:
-    cargo build --release --target {{ target_arch_os }}
+compose: build-now-stub
+    wasm-tools component new {{ epdp_wasm }} -o {{ epdp_wasi_temp }} --adapt ./env.wasm
 
 build-now-stub:
     #!/usr/bin/env bash

@@ -1,13 +1,13 @@
-name := "cerbos_adapter.wasm"
-name_signed := "cerbos_adapter_s.wasm"
-output := "cerbos-adapter-composed.wasm"
+name := "epdp_wasi_adapter.wasm"
+name_signed := "epdp_wasi_adapter_s.wasm"
+output := "epdp-wasi.wasm"
 
 target_arch_os := "wasm32-wasip1"
 target := join(justfile_directory(), "target", target_arch_os, "release", name)
 
 # not used in wasmCloud scenario
 compose: build
-    wasm-tools compose ./build/{{ name }} -d ../workspace/policy-wasi.wasm -o ./build/{{ output }}
+    wasm-tools compose ./build/{{ name }} -d ../epdp-wasm/epdp-wasi-temp.wasm -o ./build/{{ output }}
 
 build:
     cargo build --release --target {{ target_arch_os }}
