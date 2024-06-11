@@ -1,7 +1,7 @@
 # wit-adapter
 
 This repository contains a DRAFT version of [Cerbos EPDP WIT interface](wit/policy.wit).
-The interface uses rich types while the existing [Cerbos EPDP interface](./workspace/wit/host.wit) manipulates strings.
+The interface uses rich types while the existing [Cerbos EPDP interface](./epdp-wasm/wit/host.wit) manipulates strings.
 
 [Cerbos](https://github.com/cerbos/cerbos) is an open-core, language-agnostic, scalable authorization solution that simplifies user permissions and authorization by writing context-aware access control policies for application resources.
 
@@ -23,8 +23,7 @@ ePDP API is effectively a function `fn check(input: String) -> String`, except t
 
 Here, we explored converting a Wasm core module binary to a Wasm component. Please note that we are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
 
-You can check how we built ePDP in the [workspace justfile](/workspace/justfile).
-
+You can check how we built ePDP in the [epdp-wasm justfile](/epdp-wasm/justfile).
 ⚠️ This `justfile` is given only for the reference. It can't be run in the repo.
 ```justfile
 policy_wasi := "policy-wasi.wasm"
@@ -71,14 +70,14 @@ impl Guest for EPDP {
 export!(EPDP);
 ```
 
-However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. Thus, we created a generic component, `cerbos-adapter`.
+However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. Thus, we created a generic component, `epdp-wasi-adapter`.
 
-As per the following diagram, `cerbos-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
+As per the following diagram, `epdp-wasi-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
 For the build and composition steps, please refer to the [cebos-adapter/justfile](cebos-adapter/justfile).
 
 ![Components](Components.png)
 
-The client application `http-proxy` starts the HTTP component, then calls the `cerbos-adapter` and uses its rich interface.
+The client application `http-proxy` starts the HTTP component, then calls the `epdp-wasi-adapter` and uses its rich interface.
 
 ## Running the example
 Prerequisites:
@@ -88,7 +87,5 @@ Prerequisites:
 
 Let's deploy all components to wasmCloud.
 1. From the `http-proxy` directory, run `just deploy`.
-2. From the `cerbos-adapter` directory, run `just start`, then `just link` to link the components.
+2. From the `epdp-wasi-adapter` directory, run `just start`, then `just link` to link the components.
 3. Run `curl 'http://localhost:8080?role=user'` to invoke the http-proxy. You should see the `Effect::Allow`. Change the role to get `Effect::Deny`.
-
-
