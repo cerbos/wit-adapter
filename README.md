@@ -55,7 +55,7 @@ The interface reflects the module's API, with the exception that string lifting 
 The build step remained the same: `cargo build --release --target wasm32-unknown-unknown`.
 The produced core module is backward compatible with the SDK, but it can be upgraded to a Wasm component using `wasm-tools component new` command.
 The only problem is satisfying the core module import of the `now` function.
-We solved this by building a core module providing a stub function with the following command:
+We solved this by building a core module providing a stub function:
 ```bash
 rustc -o env.wasm --target wasm32-unknown-unknown --crate-type cdylib --edition=2021 \
  -C opt-level=z -C lto -C codegen-units=1 -C debuginfo=0  - <<EOF
