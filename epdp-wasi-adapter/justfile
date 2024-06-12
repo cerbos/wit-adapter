@@ -5,7 +5,7 @@ output_signed := "epdp_wasi_s.wasm"
 epdp_wasm := "policy.wasm"
 
 target_arch_os := "wasm32-wasip1"
-target := join(justfile_directory(), "target", target_arch_os, "release", snakecase(name))
+target := join(justfile_directory(), "target", target_arch_os, "release", replace(name, "-", "_"))
 
 build-now-stub:
     #!/usr/bin/env bash

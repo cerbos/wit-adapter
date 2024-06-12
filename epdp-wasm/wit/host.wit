@@ -1,8 +1,0 @@
-package cerbos-hub:epdp;
-
-interface authorization {
-    check-wasi: func(s: string, now: u64) -> string;
-}
-world policy {
-    export authorization;
-}
