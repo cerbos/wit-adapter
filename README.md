@@ -25,7 +25,7 @@ The SDK also converts these strings (JSON serialization) to rich types, which ar
 
 Here, we explored converting a Wasm core module binary to a Wasm component. We are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
 
-The idea was to change the ePDP source code incrementally. The increment must not add much both in terms of the binary size and the contract.
+The idea was to change the ePDP source code mostly incrementally. The increment must not add much to the binary size or the contract.
 We added `wit-bindgen` crate as a dependency and the following code fragment:
 ```rust
 wit_bindgen::generate!({
