@@ -5,9 +5,11 @@ This repository contains a DRAFT version of [Cerbos EPDP WIT interface](wit/poli
 [Cerbos](https://github.com/cerbos/cerbos) is an open-core, language-agnostic, scalable authorization solution that simplifies user permissions and authorization by writing context-aware access control policies for application resources.
 
 Cerbos service is a policy decision point (PDP).
-This repository deals with embedded Cerbos PDP (ePDP) - a free tier feature of [Cerbos Hub](https://hub.cerbos.cloud/).
+This repository deals with embedded Cerbos PDP (ePDP) - a free tier feature of the [Cerbos Hub](https://hub.cerbos.cloud/).
 
-ePDP is built from a set of policies as a self-contained program, which implements the same [CheckResources API](https://docs.cerbos.dev/cerbos/latest/api/#check-resources).
+ePDP is a self-contained program built from a set of policies that implements the [CheckResources API](https://docs.cerbos.dev/cerbos/latest/api/#check-resources).
+PDP, unlike ePDP, has many other endpoints.
+
 Technically, we transpile policies to Rust code and build the WebAssembly core module. A wall clock `now` function is the only dependency ePDP has on the host.
 ```rust
 #[link(wasm_import_module = "env")]
