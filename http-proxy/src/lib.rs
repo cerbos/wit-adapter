@@ -2,6 +2,7 @@ wit_bindgen::generate!();
 
 use cerbos::policy::authorization as authz;
 use exports::wasi::http::incoming_handler::Guest;
+use serde_json::{self, json};
 use wasi::http::types::*;
 
 struct HttpServer;
@@ -19,6 +20,9 @@ impl Guest for HttpServer {
             ["/?role", role] => role.to_string(),
             _ => "user".to_string(),
         };
+        let attr = json!({
+            "public": true
+        });
         let request = authz::Request {
             request_id: "test01".into(),
             principal: authz::Principal {
@@ -35,7 +39,7 @@ impl Guest for HttpServer {
                     policy_version: None,
                     kind: "album:object".into(),
                     scope: None,
-                    attr_json: Some(r#"{"public": true}"#.into()),
+                    attr_json: serde_json::from_value(attr).ok(),
                 },
             }],
             aux_data: None,
