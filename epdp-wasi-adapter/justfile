@@ -1,28 +1,38 @@
-name := "epdp_wasi_adapter.wasm"
-name_signed := "epdp_wasi_adapter_s.wasm"
+name := "epdp-wasi-adapter.wasm"
+epdp_wasi_temp := "epdp-wasi-temp.wasm"
 output := "epdp-wasi.wasm"
+output_signed := "epdp_wasi_s.wasm"
+epdp_wasm := "policy.wasm"
 
 target_arch_os := "wasm32-wasip1"
-target := join(justfile_directory(), "target", target_arch_os, "release", name)
+target := join(justfile_directory(), "target", target_arch_os, "release", snakecase(name))
 
-# not used in wasmCloud scenario
-compose: build
-    wasm-tools compose ./build/{{ name }} -d ../epdp-wasm/epdp-wasi-temp.wasm -o ./build/{{ output }}
+build-now-stub:
+    #!/usr/bin/env bash
+    rustc -o env.wasm --target {{ target_arch_os }} --crate-type cdylib --edition=2021 \
+     -C opt-level=z -C lto -C codegen-units=1 -C debuginfo=0  - <<EOF
+    #[no_mangle]
+    pub unsafe extern "C" fn now() -> u64 { 0 }
+    EOF
 
 build:
     cargo build --release --target {{ target_arch_os }}
+
+component: build build-now-stub
     mkdir -p build
     wasm-tools component new {{ target }} -o ./build/{{ name }} --adapt ./wasi_snapshot_preview1.wasm
+    wasm-tools component new ../{{ epdp_wasm }} -o {{ epdp_wasi_temp }} --adapt ./env.wasm
+    wasm-tools compose ./build/{{ name }} -d {{ epdp_wasi_temp }} -o ./build/{{ output }}
 
-sign: compose
-    wash claims sign ./build/{{ output }} --destination ./build/{{ name_signed }}
+sign: component
+    wash claims sign ./build/{{ output }} --destination ./build/{{ output_signed }}
 
 stop:
     wash stop component cerbos
 
 # use as an entry point for wasmCloud
 start: sign
-    wash start component file://{{ justfile_directory() }}/build/{{ name_signed }} cerbos
+    wash start component file://{{ justfile_directory() }}/build/{{ output_signed }} cerbos
 
 link:
     wash link put --interface authorization cerbos_http_proxy-http_component cerbos cerbos policy
