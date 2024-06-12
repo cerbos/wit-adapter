@@ -1,7 +1,6 @@
 # wit-adapter
 
 This repository contains a DRAFT version of [Cerbos EPDP WIT interface](wit/policy.wit).
-The interface uses rich types while the existing [Cerbos EPDP interface](./epdp-wasm/wit/host.wit) manipulates strings.
 
 [Cerbos](https://github.com/cerbos/cerbos) is an open-core, language-agnostic, scalable authorization solution that simplifies user permissions and authorization by writing context-aware access control policies for application resources.
 
@@ -51,7 +50,7 @@ export!(EPDP);
 ```
 The interface reflects the module's API, with the exception that string lifting and memory management are done by the `wit-bindgen`.
 
-The build steps remained the same: `cargo build --release --target wasm32-unknown-unknown`.
+The build step remained the same: `cargo build --release --target wasm32-unknown-unknown`.
 The produced core module is backward compatible with the SDK, but it can be upgraded to a Wasm component using `wasm-tools component new` command.
 The only problem is satisfying the core module import of the `now` function.
 We solved this by building a core module providing a stub function with the following command:

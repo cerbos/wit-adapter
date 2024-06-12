@@ -11,3 +11,8 @@ wasmtime-up:
 deploy:
     wash build
     wash app deploy ./wadm.yaml
+
+delete:
+    wash app delete --delete-all cerbos-http-proxy
+
+redeploy: delete deploy
