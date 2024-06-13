@@ -34,5 +34,7 @@ stop:
 start: sign
     wash start component file://{{ justfile_directory() }}/build/{{ output_signed }} cerbos
 
+restart: stop start
+
 link:
     wash link put --interface authorization cerbos_http_proxy-http_component cerbos cerbos policy
