@@ -1,6 +1,12 @@
-# wit-adapter
+# Introduction
 
-This repository contains a DRAFT version of [Cerbos EPDP WIT interface](wit/policy.wit).
+> The [WebAssembly Component Model](https://component-model.bytecodealliance.org/introduction.html) is a broad-reaching architecture for building interoperable Wasm libraries, applications, and environments".
+
+> WASI 0.2.0 was released Jan 25, 2024, providing a stable release of WASI and the component model. This is a stable set of WIT definitions that components can target. WASI proposals will continue to evolve and new ones will be introduced; however, users of the component model can now pin to the stable 0.2.0 release.
+
+This repository describes our experience of going from Core WebAssembly into WebAssembly Component Model.
+
+# Cerbos PDP and ePDP
 
 [Cerbos](https://github.com/cerbos/cerbos) is an open-core, language-agnostic, scalable authorization solution that simplifies user permissions and authorization by writing context-aware access control policies for application resources.
 
@@ -24,6 +30,8 @@ In both cases, [Cerbos JavaScript SDK](https://github.com/cerbos/cerbos-sdk-java
 The SDK also converts these strings (JSON serialization) to rich types, which are then exposed to the SDK client.
 
 Here, we explored converting a Wasm core module binary to a Wasm component. We are not building a component for the required policies from the source code; we build a module, which then upgrades to a component.
+
+# Make Wasm modules upgradable to the component model
 
 The idea was to change the ePDP source code mostly incrementally. The increment must not add much to the binary size or the contract.
 We added `wit-bindgen` crate as a dependency and the following code fragment:
@@ -53,7 +61,11 @@ export!(EPDP);
 The interface reflects the module's API, with the exception that string lifting and memory management are done by the `wit-bindgen`.
 
 The build step remained the same: `cargo build --release --target wasm32-unknown-unknown`.
-The produced core module is backward compatible with the SDK, but it can be upgraded to a Wasm component using `wasm-tools component new` command.
+The produced core module is compatible with the SDK. 
+
+# Convert a module to a component
+
+A module can be upgraded to a Wasm component using the `wasm-tools component new` command.
 The only problem is satisfying the core module import of the `now` function.
 We solved this by building a core module providing a stub function:
 ```bash
@@ -64,24 +76,33 @@ pub unsafe extern "C" fn now() -> u64 { 0 }
 EOF
 ```
 
-Then to create an ePDP component from an ePDP core module: `wasm-tools component new <INPUT> -o <OUTPUT> --adapt ./env.wasm`
+Then, create an ePDP component from an ePDP core module: `wasm-tools component new epdp-wasm.wasm -o epdp-wasi-temp.wasm --adapt ./env.wasm`.
 
-However, we want our ePDP to use rich types so we can skip the JSON serialization/deserialization step. To achive that, we created a generic component, `epdp-wasi-adapter`.
+# Going from a string-based interface to a rich one
+
+However, we want to create an ePDP Wasm component with rich types in the interface to skip the JSON serialization/deserialization step. 
+See the DRAFT version of the [Cerbos EPDP WIT interface](wit/policy.wit). For an overview of WIT, click [here](https://component-model.bytecodealliance.org/design/wit.html).
+
+To create a rich type component, we created a generic component, `epdp-wasi-adapter`.
 
 As per the following diagram, `epdp-wasi-adapter` exports a rich interface and imports a simple one from the `cerbos-hub:epdp` package.
-For the build and composition steps, please refer to the [epdp-wasi-adapter/justfile](epdp-wasi-adapter/justfile).
 
 ![Components](Components.png)
 
-The client application `http-proxy` starts the HTTP component, then calls the `epdp-wasi-adapter` and uses its rich interface.
+Our formula for producing a component model ePDP is `epdp-wasi = epdp-wasi-adapter + epdp-wasi-temp`, where `epdp-wasi-temp = epdp-wasm + env.wasm`.
 
-## Running the example
+For details on the building and composition, please refer to the [epdp-wasi-adapter/justfile](epdp-wasi-adapter/justfile).
+
+## Example
+
+In the example, the client application `http-proxy` starts the HTTP component, then calls the `epdp-wasi` via its rich interface.
+
 Prerequisites:
 1. Rust toolchain.
 2. [wasmCloud](https://wasmcloud.com/docs/installation).
 3. [justfile](https://github.com/casey/just).
 
 Let's deploy all components to wasmCloud.
-1. From the `http-proxy` directory, run `just deploy`.
-2. From the `epdp-wasi-adapter` directory, run `just start`, then `just link` to link the components.
+1. From the `http-proxy` directory, run `just deploy`. To redeploy, run `just redeploy`.
+2. From the `epdp-wasi-adapter` directory, run `just start`, then `just link` to link the components. To restart, run `just restart`.
 3. Run `curl 'http://localhost:8080?role=user'` to invoke the http-proxy. You should see the `Effect::Allow`. Change the role to get `Effect::Deny`.
