@@ -4,17 +4,15 @@
 
 > WASI 0.2.0 was released Jan 25, 2024, providing a stable release of WASI and the component model. This is a stable set of WIT definitions that components can target. WASI proposals will continue to evolve and new ones will be introduced; however, users of the component model can now pin to the stable 0.2.0 release.
 
-This repository describes our experience of going from Core WebAssembly into WebAssembly Component Model.
+This repository describes our experience going from Core WebAssembly into WebAssembly Component Model.
 
 # Cerbos PDP and ePDP
 
 [Cerbos](https://github.com/cerbos/cerbos) is an open-core, language-agnostic, scalable authorization solution that simplifies user permissions and authorization by writing context-aware access control policies for application resources.
 
-Cerbos service is a policy decision point (PDP).
-This repository deals with embedded Cerbos PDP (ePDP) - a free tier feature of the [Cerbos Hub](https://hub.cerbos.cloud/).
+Cerbos service is a policy decision point (PDP). This repository deals with embedded Cerbos PDP (ePDP) - a free tier feature of the [Cerbos Hub](https://hub.cerbos.cloud/).
 
-ePDP is a self-contained program built from a set of policies that implements the [CheckResources API](https://docs.cerbos.dev/cerbos/latest/api/#check-resources).
-PDP, unlike ePDP, has many other endpoints.
+An ePDP is a self-contained program built from a set of policies that implements the [CheckResources API](https://docs.cerbos.dev/cerbos/latest/api/#check-resources).
 
 Technically, we transpile policies to Rust code and build the WebAssembly core module. A wall clock `now` function is the only dependency ePDP has on the host.
 ```rust
@@ -58,7 +56,7 @@ impl exports::cerbos_hub::epdp::authorization::Guest for EPDP {
 }
 export!(EPDP);
 ```
-The interface reflects the module's API, with the exception that string lifting and memory management are done by the `wit-bindgen`.
+The interface reflects the module's API, except that string lifting and memory management are done by the `wit-bindgen`.
 
 The build step remained the same: `cargo build --release --target wasm32-unknown-unknown`.
 The produced core module is compatible with the SDK. 
@@ -95,7 +93,7 @@ For details on the building and composition, please refer to the [epdp-wasi-adap
 
 ## Example
 
-In the example, the client application `http-proxy` starts the HTTP component, then calls the `epdp-wasi` via its rich interface.
+In the example, the client application `http-proxy` starts the HTTP component, and then calls the `epdp-wasi` via its rich interface.
 
 Prerequisites:
 1. Rust toolchain.
