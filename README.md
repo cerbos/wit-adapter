@@ -94,6 +94,7 @@ For details on the building and composition, please refer to the [epdp-wasi-adap
 ## Example
 
 In the example, the client application `http-proxy` starts the HTTP component, and then calls the `epdp-wasi` via its rich interface.
+The repository contains a sample version of `epdp-wasm.wasm`. You can use the Cerbos Hub to download `epdp-wasm` with your policies.
 
 Prerequisites:
 1. Rust toolchain.
