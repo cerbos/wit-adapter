@@ -23,6 +23,7 @@ impl Guest for HttpServer {
         let attr = json!({
             "public": true
         });
+
         let request = authz::Request {
             request_id: "test01".into(),
             principal: authz::Principal {
@@ -33,13 +34,14 @@ impl Guest for HttpServer {
                 attr_json: None,
             },
             resources: vec![authz::ResourceEntry {
-                actions: vec!["view".into()],
+                actions: vec!["view".into(), "delete".into()],
                 resource: authz::Resource {
                     id: "abc123".into(),
                     policy_version: None,
                     kind: "album:object".into(),
                     scope: None,
-                    attr_json: serde_json::from_value(attr).ok(),
+                    attr_json: serde_json::to_string(&attr).ok(),
+                    // attr_json: Some(r#"{"public": true}"#.to_string()),
                 },
             }],
             aux_data: None,
@@ -50,7 +52,7 @@ impl Guest for HttpServer {
         response_body
             .write()
             .unwrap()
-            .blocking_write_and_flush(format!("{:?}", res.results[0].actions[0].1).as_bytes())
+            .blocking_write_and_flush(format!("{:#?}", res).as_bytes())
             .unwrap();
         OutgoingBody::finish(response_body, None).expect("failed to finish response body");
     }

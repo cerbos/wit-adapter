@@ -2,7 +2,7 @@ name := "epdp-wasi-adapter.wasm"
 epdp_wasi_temp := "epdp-wasi-temp.wasm"
 output := "epdp-wasi.wasm"
 output_signed := "epdp_wasi_s.wasm"
-epdp_wasm := "policy.wasm"
+epdp_wasm := "epdp-wasm.wasm"
 
 target_arch_os := "wasm32-wasip1"
 target := join(justfile_directory(), "target", target_arch_os, "release", replace(name, "-", "_"))
