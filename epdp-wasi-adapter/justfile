@@ -8,7 +8,10 @@ target_arch_os := "wasm32-wasip1"
 target := join(justfile_directory(), "target", target_arch_os, "release", replace(name, "-", "_"))
 
 download url:
-    curl -sLo ../{{ epdp_wasm }} {{url}}
+    #!/usr/bin/env bash
+    mkdir -p build
+    curl -s -Lo build/{{ epdp_wasm }} "{{url}}"
+    file build/{{ epdp_wasm }}
 
 build-now-stub:
     #!/usr/bin/env bash
@@ -24,7 +27,7 @@ build:
 component: build build-now-stub
     mkdir -p build
     wasm-tools component new {{ target }} -o ./build/{{ name }} --adapt ./wasi_snapshot_preview1.wasm
-    wasm-tools component new ../{{ epdp_wasm }} -o {{ epdp_wasi_temp }} --adapt ./env.wasm
+    wasm-tools component new build/{{ epdp_wasm }} -o {{ epdp_wasi_temp }} --adapt ./env.wasm
     wasm-tools compose ./build/{{ name }} -d {{ epdp_wasi_temp }} -o ./build/{{ output }}
 
 sign: component
